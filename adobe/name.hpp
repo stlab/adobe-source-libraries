@@ -22,6 +22,7 @@
 #include <boost/type_traits/is_pod.hpp>
 
 // asl
+#include <adobe/cmath.hpp>
 #include <adobe/conversion.hpp>
 #include <adobe/cstring.hpp>
 #include <adobe/fnv.hpp>
@@ -67,9 +68,12 @@ constexpr std::size_t name_hash(const char* str, std::size_t len, std::size_t n,
                                 std::size_t state) {
     static_assert(sizeok_k, "Unknown sizeof std::size_t (must be 4 or 8).");
 
-    return n < len ? name_hash(str, len, n + 1,
-                               (state xor static_cast<std::size_t>(str[n])) * name_fnv_prime_k)
-                   : state;
+	if (n >= len)
+		return state;
+
+	state ^= static_cast<std::size_t>(str[n]);
+	state = multiply_unsigned(state, name_fnv_prime_k);
+    return name_hash(str, len, n + 1, state);
 }
 
 constexpr std::size_t name_hash(const char* str, std::size_t len) {
